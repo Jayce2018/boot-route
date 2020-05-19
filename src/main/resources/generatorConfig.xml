@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <!--<properties resource="dev.properties"/>-->
+
+    <context id="Mysql" targetRuntime="MyBatis3Simple" defaultModelType="flat">
+        <property name="beginningDelimiter" value="`"/>
+        <property name="endingDelimiter" value="`"/>
+        <property name="mergeable" value="false"></property>
+        <plugin type="tk.mybatis.mapper.generator.MapperPlugin">
+            <property name="mappers" value="tk.mybatis.mapper.common.Mapper"/>
+        </plugin>
+
+        <!--测试环境,查找keys:dev-->
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&amp;characterEncoding=UTF8&amp;allowMultiQueries=true&amp;serverTimezone=Asia/Shanghai&amp;useUnicode=true&amp;characterEncoding=utf-8"
+                        userId="root"
+                        password="123456">
+        </jdbcConnection>
+
+
+        <javaModelGenerator targetPackage="com.jayce.boot.route.entity"
+                            targetProject="src/main/java/"/>
+
+        <sqlMapGenerator targetPackage="com.jayce.boot.route.mapper"
+                         targetProject="src/main/resources/"/>
+
+        <javaClientGenerator targetPackage="com.jayce.boot.route.mapper"
+                             targetProject="src/main/java/"
+                             type="XMLMAPPER"/>
+
+        <table tableName="library_book" domainObjectName="LibraryBook">
+            <!--<property name="rootClass" value="com.jayce.boot.route.vo.extra.LibraryBookExtra"/>-->
+            <generatedKey column="book_id" identity="false" sqlStatement="MySql"/>
+        </table>
+
+        <!--示例说明-->
+        <!--<table tableName="water_user_account" domainObjectName="WaterUserAccount">
+                &lt;!&ndash; 继承基类 &ndash;&gt;
+                <property name="rootClass" value="com.yc.cloud.water.common.base.entity.WaterBaseEntity"/>
+                &lt;!&ndash; 主键设置 &ndash;&gt;
+                <generatedKey column="user_account_id" identity="false" sqlStatement="MySql"/>
+        </table>-->
+
+    </context>
+</generatorConfiguration>
