@@ -18,6 +18,7 @@ public class RouteController {
 
     @RequestMapping(value = "/book", method = RequestMethod.GET)
     public List<LibraryBook> main() {
+        //libraryBookService=SpringUtil.getBean("libraryBookService");
         return libraryBookService.selectListAll();
     }
 
