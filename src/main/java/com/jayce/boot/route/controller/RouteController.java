@@ -1,7 +1,9 @@
 package com.jayce.boot.route.controller;
 
+import com.jayce.boot.route.common.Thread.BookListThread;
 import com.jayce.boot.route.common.enums.BusinessCodeEnum;
 import com.jayce.boot.route.common.exception.BusinessException;
+import com.jayce.boot.route.common.util.DesignThreadPool;
 import com.jayce.boot.route.entity.LibraryBook;
 import com.jayce.boot.route.service.LibraryBookService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Vector;
 
 @RestController
 @RequestMapping("/route")
@@ -16,10 +19,42 @@ public class RouteController {
     @Autowired
     private LibraryBookService libraryBookService;
 
+    private Integer lopNum = 200;
+
     @RequestMapping(value = "/book", method = RequestMethod.GET)
     public List<LibraryBook> main() {
         //libraryBookService=SpringUtil.getBean("libraryBookService");
         return libraryBookService.selectListAll();
+    }
+
+    @RequestMapping(value = "/book/lop", method = RequestMethod.GET)
+    public List<LibraryBook> bookLop() {
+        long start = System.currentTimeMillis();
+        List<LibraryBook> result = new Vector<>();
+        for (int i = 0; i < lopNum; i++) {
+            result.addAll(libraryBookService.selectListAll());
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("运行时间：" + (end - start));
+        System.out.println("size：" + result.size());
+        return result;
+    }
+
+    @RequestMapping(value = "/book/thread", method = RequestMethod.GET)
+    public List<LibraryBook> bookThread() throws InterruptedException {
+        long start = System.currentTimeMillis();
+        List<LibraryBook> result = new Vector<>();
+        DesignThreadPool pool = DesignThreadPool.getInstance();
+        for (int i = 0; i < lopNum; i++) {
+            pool.execute(new BookListThread(result));
+        }
+        do {
+            Thread.sleep(10);
+        } while (pool.isWork());
+        long end = System.currentTimeMillis();
+        System.out.println("运行时间：" + (end - start));
+        System.out.println("size：" + result.size());
+        return result;
     }
 
     @RequestMapping(value = "/main", method = RequestMethod.GET)
