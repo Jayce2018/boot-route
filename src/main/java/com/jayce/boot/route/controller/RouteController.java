@@ -1,11 +1,13 @@
 package com.jayce.boot.route.controller;
 
+import com.github.pagehelper.PageInfo;
 import com.jayce.boot.route.common.Thread.BookListThread;
 import com.jayce.boot.route.common.enums.BusinessCodeEnum;
 import com.jayce.boot.route.common.exception.BusinessException;
 import com.jayce.boot.route.common.util.DesignThreadPool;
 import com.jayce.boot.route.entity.LibraryBook;
 import com.jayce.boot.route.service.LibraryBookService;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +23,13 @@ public class RouteController {
 
     private Integer lopNum = 200;
 
+    @ApiOperation(value = "分页测试")
     @RequestMapping(value = "/book", method = RequestMethod.GET)
-    public List<LibraryBook> main() {
-        //libraryBookService=SpringUtil.getBean("libraryBookService");
-        return libraryBookService.selectListAll();
+    public PageInfo<LibraryBook> main() {
+        return libraryBookService.testPage(2,5);
     }
 
+    @ApiOperation(value = "性能测试-循环")
     @RequestMapping(value = "/book/lop", method = RequestMethod.GET)
     public List<LibraryBook> bookLop() {
         long start = System.currentTimeMillis();
@@ -40,6 +43,7 @@ public class RouteController {
         return result;
     }
 
+    @ApiOperation(value = "性能测试-线程池")
     @RequestMapping(value = "/book/thread", method = RequestMethod.GET)
     public List<LibraryBook> bookThread() throws InterruptedException {
         long start = System.currentTimeMillis();
