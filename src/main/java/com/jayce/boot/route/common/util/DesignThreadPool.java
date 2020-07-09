@@ -33,7 +33,7 @@ public class DesignThreadPool {
     @ApiModelProperty(value = "自定义线程池")
     public static DesignThreadPool designThreadPool;
 
-    private DesignThreadPool() {
+    public DesignThreadPool() {
         executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
     }
 

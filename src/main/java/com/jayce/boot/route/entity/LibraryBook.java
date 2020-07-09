@@ -1,12 +1,15 @@
 package com.jayce.boot.route.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 
-import java.util.Date;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Date;
+import java.util.List;
 
+@Data
 @Table(name = "library_book")
 public class LibraryBook {
     @Id
@@ -31,89 +34,8 @@ public class LibraryBook {
     @Column(name = "update_time")
     private Date updateTime;
 
-    /**
-     * @return book_id
-     */
-    public Long getBookId() {
-        return bookId;
-    }
-
-    /**
-     * @param bookId
-     */
-    public void setBookId(Long bookId) {
-        this.bookId = bookId;
-    }
-
-    /**
-     * @return book_name
-     */
-    public String getBookName() {
-        return bookName;
-    }
-
-    /**
-     * @param bookName
-     */
-    public void setBookName(String bookName) {
-        this.bookName = bookName;
-    }
-
-    /**
-     * @return type
-     */
-    public Integer getType() {
-        return type;
-    }
-
-    /**
-     * @param type
-     */
-    public void setType(Integer type) {
-        this.type = type;
-    }
-
-    /**
-     * @return status
-     */
-    public Integer getStatus() {
-        return status;
-    }
-
-    /**
-     * @param status
-     */
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    /**
-     * @return create_time
-     */
-    public Date getCreateTime() {
-        return createTime;
-    }
-
-    /**
-     * @param createTime
-     */
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
-    }
-
-    /**
-     * @return update_time
-     */
-    public Date getUpdateTime() {
-        return updateTime;
-    }
-
-    /**
-     * @param updateTime
-     */
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
-    }
+    @Transient
+    private List<Long> idList;
 
     /**
      * 标记接口
