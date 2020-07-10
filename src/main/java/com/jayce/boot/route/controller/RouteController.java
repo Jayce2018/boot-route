@@ -6,6 +6,7 @@ import com.jayce.boot.route.common.enums.BusinessCodeEnum;
 import com.jayce.boot.route.common.exception.BusinessException;
 import com.jayce.boot.route.common.util.DesignThreadPool;
 import com.jayce.boot.route.entity.LibraryBook;
+import com.jayce.boot.route.function.apiversion.ApiVersion;
 import com.jayce.boot.route.service.LibraryBookService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +65,18 @@ public class RouteController {
     @RequestMapping(value = "/main", method = RequestMethod.GET)
     public String bookList(@RequestParam String string) {
         return string;
+    }
+
+    @RequestMapping(value = "/main", method = RequestMethod.GET)
+    @ApiVersion(value = "15")
+    public String bookListV15(@RequestParam String string) {
+        return "15->"+string;
+    }
+
+    @RequestMapping(value = "/main", method = RequestMethod.GET)
+    @ApiVersion(value = "10")
+    public String bookListV10(@RequestParam String string) {
+        return "10->"+string;
     }
 
     @RequestMapping(value = "/exception", method = RequestMethod.GET)
