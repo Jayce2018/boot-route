@@ -1,5 +1,6 @@
 package com.jayce.boot.route.function.apiversion;
 
+import com.jayce.boot.route.common.constant.CommonConstant;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.condition.RequestCondition;
@@ -32,7 +33,7 @@ public class ApiVersionCondition implements RequestCondition<ApiVersionCondition
 
     @Override
     public ApiVersionCondition getMatchingCondition(HttpServletRequest request) {
-        String headVersion = request.getHeader("X-Api-Version");
+        String headVersion = request.getHeader(CommonConstant.API_VERSION_HEADER);
         if (!("".equals(headVersion))) {
             if( null == headVersion){
                 return null;

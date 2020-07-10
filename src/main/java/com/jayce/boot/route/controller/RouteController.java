@@ -93,4 +93,20 @@ public class RouteController {
     public void bookUpdate(@RequestBody @Validated(value = LibraryBook.Update.class) LibraryBook book) {
         libraryBookService.updateSelectiveById(book);
     }
+
+    @RequestMapping(value = "/prod", produces = {
+            "application/JSON"
+    })
+    @ResponseBody
+    String getProduces() {
+        return "Produces attribute";
+    }
+
+    @RequestMapping(value = "/cons", consumes = {
+            "application/JSON",
+            "application/XML"
+    })
+    String getConsumes() {
+        return "Consumes attribute";
+    }
 }
