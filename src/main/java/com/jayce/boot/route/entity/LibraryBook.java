@@ -36,6 +36,59 @@ public class LibraryBook {
 
     @Transient
     private List<Long> idList;
+    @Transient
+    private Boolean flag;
+
+    public LibraryBook() {
+    }
+
+    public LibraryBook(String bookName, Integer type, Integer status) {
+        this.bookName = bookName;
+        this.type = type;
+        this.status = status;
+        this.createTime=new Date();
+        this.updateTime=new Date();
+    }
+
+    public LibraryBook(String bookName, Integer status) {
+        this.bookName = bookName;
+        this.status = status;
+        this.createTime=new Date();
+        this.updateTime=new Date();
+    }
+
+    public enum FlagEnum {
+        //
+        FLAG_ENUM_NO(1, "1"),
+        FLAG_ENUM_YES(2, "2"),
+        ;
+
+        private Integer code;
+        private String value;
+
+        FlagEnum(Integer code, String value) {
+            this.code = code;
+            this.value = value;
+        }
+
+        public Integer getCode() {
+            return code;
+        }
+
+        public void setCode(Integer code) {
+            this.code = code;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+    }
+
+
 
     /**
      * 标记接口

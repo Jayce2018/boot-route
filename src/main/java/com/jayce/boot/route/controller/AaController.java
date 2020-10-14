@@ -3,6 +3,11 @@ package com.jayce.boot.route.controller;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.jayce.boot.route.common.util.MybatisSqlUtil;
+import com.jayce.boot.route.entity.LibraryBook;
+import com.jayce.boot.route.mapper.LibraryBookMapper;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,11 +30,17 @@ import java.util.Map;
 public class AaController {
     @Autowired
     private WebApplicationContext applicationContext;
+
+    @Autowired
+    private SqlSessionFactory sqlSessionFactory;
     /**
      * saas服务的上下文路径
      */
     @Value("${server.servlet.context-path:${server.context-path:}}")
     private String contextPath;
+
+    @Autowired
+    private LibraryBookMapper libraryBookMapper;
 
     @RequestMapping(value = "v1/getAllUrl", method ={RequestMethod.POST, RequestMethod.GET})
     public Object getAllUrl() {
@@ -81,5 +92,21 @@ public class AaController {
         return contextPath;
     }
 
+    @RequestMapping(value = "getSql", method = RequestMethod.GET, produces = "application/json;charset=UTF-8")
+    public String getSql() {
+        //libraryBookMapper.insertSelective();
+        LibraryBook book=new LibraryBook();
+        book.setBookName("sql语句获取");
+        book.setStatus(1);
+        BoundSql boundSql = sqlSessionFactory.getConfiguration()
+                .getMappedStatement("com.jayce.boot.route.mapper.LibraryBookMapper.insertSelective")
+                .getBoundSql(book);
+        System.out.println("sql->"+boundSql.getSql());
+        System.out.println("sql->"+boundSql.getParameterObject());
+//        String finalSql = MybatisSqlUtil.getSql(boundSql, book, sqlSessionFactory.getConfiguration());
+        String finalSql = MybatisSqlUtil.getExeSql(sqlSessionFactory,book,"com.jayce.boot.route.mapper.LibraryBookMapper.insertSelective");
+        System.out.println("finalSql->"+finalSql);
+        return finalSql;
+    }
 
 }

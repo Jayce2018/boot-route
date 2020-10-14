@@ -17,6 +17,7 @@ public class BaseRestControllerAdvice {
     @ExceptionHandler(BusinessException.class)
     @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
     public ResultVO businessException(BusinessException e) {
+        e.printStackTrace();
         return new ResultVO(e.getCode(), e.getMessage());
     }
 
