@@ -1,4 +1,4 @@
-package com.jayce.boot.route.common.Thread;
+package com.jayce.boot.route.common.thread;
 
 import com.jayce.boot.route.common.util.SpringUtil;
 import com.jayce.boot.route.entity.LibraryBook;

@@ -3,10 +3,10 @@ package com.jayce.boot.route.controller;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.jayce.boot.route.common.thread.BusinessThreadPool;
 import com.jayce.boot.route.common.util.MybatisSqlUtil;
 import com.jayce.boot.route.entity.LibraryBook;
 import com.jayce.boot.route.mapper.LibraryBookMapper;
-import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -98,15 +98,23 @@ public class AaController {
         LibraryBook book=new LibraryBook();
         book.setBookName("sql语句获取");
         book.setStatus(1);
-        BoundSql boundSql = sqlSessionFactory.getConfiguration()
-                .getMappedStatement("com.jayce.boot.route.mapper.LibraryBookMapper.insertSelective")
-                .getBoundSql(book);
-        System.out.println("sql->"+boundSql.getSql());
-        System.out.println("sql->"+boundSql.getParameterObject());
-//        String finalSql = MybatisSqlUtil.getSql(boundSql, book, sqlSessionFactory.getConfiguration());
-        String finalSql = MybatisSqlUtil.getExeSql(sqlSessionFactory,book,"com.jayce.boot.route.mapper.LibraryBookMapper.insertSelective");
+        String finalSql = MybatisSqlUtil.getExeSql(sqlSessionFactory, book, "com.jayce.boot.route.mapper.LibraryBookMapper.testSql");
         System.out.println("finalSql->"+finalSql);
         return finalSql;
+    }
+
+    @RequestMapping(value = "test", method = RequestMethod.GET, produces = "application/json;charset=UTF-8")
+    public void test() throws InterruptedException {
+        BusinessThreadPool pool = BusinessThreadPool.getInstance(BusinessThreadPool.PoolNameEnum.POOL_TEST.getValue());
+        pool.execute(() -> {
+            System.out.println("test");
+        });
+        pool.shutdown();
+        while (true) {
+            System.out.println("对象为空：" + (null == BusinessThreadPool.map.get(BusinessThreadPool.PoolNameEnum.POOL_TEST.getValue())));
+            System.out.println("池关闭：" + pool.isShutdown());
+            Thread.sleep(1000);
+        }
     }
 
 }

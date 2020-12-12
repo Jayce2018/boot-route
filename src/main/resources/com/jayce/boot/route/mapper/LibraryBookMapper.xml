@@ -12,4 +12,17 @@
     <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
     <result column="update_time" property="updateTime" jdbcType="TIMESTAMP" />
   </resultMap>
+
+  <select id="testSql" resultType="java.lang.String">
+    select * from library_book
+    <where>
+      <if test="bookId!=null">
+        and book_id = #{bookId}
+      </if>
+
+      <if test="bookName!=null">
+        and book_name = #{bookName}
+      </if>
+    </where>
+  </select>
 </mapper>
