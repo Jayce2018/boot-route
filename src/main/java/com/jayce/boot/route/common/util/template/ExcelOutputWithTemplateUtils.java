@@ -2,7 +2,6 @@ package com.jayce.boot.route.common.util.template;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
@@ -13,55 +12,52 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+
+class ExcelConstant {
+    public final static Integer INTEGER = 1;
+    public final static Integer DOUBLE = 2;
+    public final static Integer STRING = 3;
+    public final static Integer DATE = 4;
+    public final static Integer BOOLEAN = 5;
+    public final static Map<Integer, CellStyle> STYLE_MAP = new HashMap<>();
+}
 
 /**
  * 按模板导出数据
  *
- * @author 111223/sunjie
+ * @author sunjie
  * @date 2020/3/3 18:59
  */
 public class ExcelOutputWithTemplateUtils {
     private final static String XLS = "xls";
     private final static String XLSX = ".xlsx";
 
+
     /**
      * 本地导出出口
      */
-    public static void exportLocal(String fileName, String excelTemplateUrl, HashMap<Integer, String[][]> dateMap, String exportUrl) throws Exception {
-        ExcelVO excelVO = transform(fileName, excelTemplateUrl, dateMap);
-        if (excelVO != null) {
-            export(excelVO.getWorkbook(), fileName, 1, excelVO.getSuffix(), exportUrl, null);
-        } else {
-            System.out.println("throw new BusinessException(MultiCommonErrorCode.EXCEL_EXCEPTION_EXPORT);");
-        }
+    public static void exportLocal(String fileName, String excelTemplateUrl, Boolean isResources, HashMap<Integer, Object[][]> dateMap, String exportUrl) throws Exception {
+        ExcelVO excelVO = transform(fileName, excelTemplateUrl, isResources, dateMap);
+        export(excelVO.getWorkbook(), fileName, 1, excelVO.getSuffix(), exportUrl, null);
     }
 
     /**
      * 流导出出口
      */
-    public static void exportResponse(String fileName, String excelTemplateUrl, HashMap<Integer, String[][]> dateMap, HttpServletResponse response) throws Exception {
-        ExcelVO excelVO = transform(fileName, excelTemplateUrl, dateMap);
-        if (excelVO != null) {
-            export(excelVO.getWorkbook(), fileName, 2, excelVO.getSuffix(), null, response);
-        } else {
-            System.out.println("throw new BusinessException(MultiCommonErrorCode.EXCEL_EXCEPTION_EXPORT);");
-        }
+    public static void exportResponse(String fileName, String excelTemplateUrl, Boolean isResources, HashMap<Integer, Object[][]> dateMap, HttpServletResponse response) throws Exception {
+        ExcelVO excelVO = transform(fileName, excelTemplateUrl, isResources, dateMap);
+        export(excelVO.getWorkbook(), fileName, 2, excelVO.getSuffix(), null, response);
     }
 
     /**
      * 解析模板
      */
-    public static void parseExcelResource(String uri) throws Exception {
+    public static void parseExcelResource(String uri, Boolean isResources) throws Exception {
         HashMap<Integer, Integer> columnSizeMap = new HashMap<Integer, Integer>();
-        Workbook workbook = getWorkBook(uri);
+        Workbook workbook = getWorkBook(uri, isResources);
         //原始结果
         List<JSONObject> objectList = new ArrayList<>();
         //获取一共有多少sheet，然后遍历
@@ -94,14 +90,21 @@ public class ExcelOutputWithTemplateUtils {
     /**
      * getWorkBook
      */
-    private static Workbook getWorkBook(String uri) {
+    private static Workbook getWorkBook(String uri, Boolean isResources) {
         try {
             String[] strings = uri.split("\\.");
             String originalFilename = strings[strings.length - 1];
-            Resource resource = new ClassPathResource(uri);
             // 获取文件输入流
-            InputStream inputStream = resource.getInputStream();
-            //创建一个webbook，对应一个Excel文件
+            InputStream inputStream;
+            if (isResources) {
+                Resource resource = new ClassPathResource(uri);
+                inputStream = resource.getInputStream();
+            } else {
+                inputStream = new FileInputStream(uri);
+            }
+
+
+            //创建一个workbook，对应一个Excel文件
             Workbook workbook;
             if (originalFilename.equals(XLS)) {
                 workbook = new HSSFWorkbook(new POIFSFileSystem(inputStream));
@@ -116,17 +119,44 @@ public class ExcelOutputWithTemplateUtils {
     }
 
     /**
-     * 数据转换
+     * 单元格样式表,追加数据格式
+     *
+     * @param wb wb
      */
-    private static ExcelVO transform(String fileName, String excelUrl, HashMap<Integer, String[][]> dateMap) throws Exception {
-        ExcelVO excelVO = new ExcelVO();
-        //文件后缀
-        String[] strings = excelUrl.split("\\.");
-        String suffix = "." + strings[strings.length - 1];
+    private static void initStyleMap(Workbook wb) {
+        //intStyle
+        CellStyle intStyle = defaultStyle(wb);
+        DataFormat intDataFormat = wb.createDataFormat();
+        intStyle.setDataFormat(intDataFormat.getFormat("0"));
+        ExcelConstant.STYLE_MAP.put(ExcelConstant.INTEGER, intStyle);
+        //doubleStyle 注意excel小数型有效数字15，超过会自动截断
+        CellStyle doubleStyle = defaultStyle(wb);
+        DataFormat doubleDataFormat = wb.createDataFormat();
+        doubleStyle.setDataFormat(doubleDataFormat.getFormat("0.00E+00"));
+        ExcelConstant.STYLE_MAP.put(ExcelConstant.DOUBLE, doubleStyle);
+        //stringStyle
+        CellStyle stringStyle = defaultStyle(wb);
+        DataFormat stringDataFormat = wb.createDataFormat();
+        stringStyle.setDataFormat(stringDataFormat.getFormat("General"));
+        ExcelConstant.STYLE_MAP.put(ExcelConstant.STRING, intStyle);
+        //dateStyle
+        CellStyle dateStyle = defaultStyle(wb);
+        DataFormat dateDataFormat = wb.createDataFormat();
+        dateStyle.setDataFormat(dateDataFormat.getFormat("yyyy/mm/dd hh:mm:ss"));
+        ExcelConstant.STYLE_MAP.put(ExcelConstant.DATE, dateStyle);
+        //booleanStyle
+        CellStyle booleanStyle = defaultStyle(wb);
+        DataFormat booleanDataFormat = wb.createDataFormat();
+        booleanStyle.setDataFormat(booleanDataFormat.getFormat("General"));
+        ExcelConstant.STYLE_MAP.put(ExcelConstant.BOOLEAN, dateStyle);
+    }
 
-        // 第一步，创建一个webbook，对应一个Excel文件
-        Workbook wb = getWorkBook(excelUrl);
-
+    /**
+     * 默认样式
+     *
+     * @param wb wb
+     */
+    private static CellStyle defaultStyle(Workbook wb) {
         //预设cell创建样式
         // 为数据内容设置特点新单元格样式2 自动换行 上下居中左右也居中
         CellStyle cellStyle = wb.createCellStyle();
@@ -143,24 +173,29 @@ public class ExcelOutputWithTemplateUtils {
         cellStyle.setBorderRight(HSSFCellStyle.BORDER_THIN);
         cellStyle.setBorderTop(HSSFCellStyle.BORDER_THIN);
 
-        //POI 4.0.1写法
-        /*// 创建一个上下居中格式
-        cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-        // 左右居中
-        cellStyle.setAlignment(HorizontalAlignment.CENTER);
-        // 设置边框
-        cellStyle.setBottomBorderColor(IndexedColors.BLACK.getIndex());
-        cellStyle.setBorderBottom(BorderStyle.THIN);
-        cellStyle.setBorderLeft(BorderStyle.THIN);
-        cellStyle.setBorderRight(BorderStyle.THIN);
-        cellStyle.setBorderTop(BorderStyle.THIN);*/
+        return cellStyle;
+    }
+
+    /**
+     * 数据转换
+     */
+    private static ExcelVO transform(String fileName, String excelUrl, Boolean isResources, HashMap<Integer, Object[][]> dateMap) throws Exception {
+        ExcelVO excelVO = new ExcelVO();
+        //文件后缀
+        String[] strings = excelUrl.split("\\.");
+        String suffix = "." + strings[strings.length - 1];
+
+        // 第一步，创建一个webbook，对应一个Excel文件
+        Workbook wb = getWorkBook(excelUrl, isResources);
+        //初始化样式表
+        initStyleMap(wb);
 
         int numberOfSheets = wb.getNumberOfSheets();
         //sheet级别
         for (int i = 0; i < numberOfSheets; i++) {
             Sheet sheet = wb.getSheetAt(i);
             //取得sheet渲染数据
-            String[][] sheetData = dateMap.get(i);
+            Object[][] sheetData = dateMap.get(i);
             //sheet无数据跳过
             if (null == sheetData) {
                 continue;
@@ -173,8 +208,8 @@ public class ExcelOutputWithTemplateUtils {
                     Row row = sheet.getRow(j);
                     for (int k = 0; k < sheetData[j].length; k++) {
                         Cell cell = row.getCell(k);
-                        if (StringUtils.isNotBlank(sheetData[j][k])) {
-                            cell.setCellValue(sheetData[j][k]);
+                        if (null != sheetData[j][k]) {
+                            conversion(sheetData[j][k], cell);
                         }
                     }
                 } else {
@@ -184,8 +219,7 @@ public class ExcelOutputWithTemplateUtils {
                     for (int k = 0; k < sheetData[j].length; k++) {
                         Cell cell = row.createCell(k);
                         if (null != sheetData[j][k]) {
-                            cell.setCellValue(sheetData[j][k]);
-                            cell.setCellStyle(cellStyle);
+                            conversion(sheetData[j][k], cell);
                         }
                     }
                 }
@@ -196,6 +230,42 @@ public class ExcelOutputWithTemplateUtils {
         excelVO.setFileName(fileName);
         excelVO.setSuffix(suffix);
         return excelVO;
+    }
+
+    /**
+     * java对象转poi单元格对象
+     *
+     * @param item item
+     * @param cell cell
+     */
+    private static void conversion(Object item, Cell cell) {
+        if (Integer.class == item.getClass() || Short.class == item.getClass() || Long.class == item.getClass()) {
+            cell.setCellValue(Double.parseDouble(item.toString()));
+            cell.setCellType(Cell.CELL_TYPE_NUMERIC);
+            cell.setCellStyle(ExcelConstant.STYLE_MAP.get(ExcelConstant.INTEGER));
+        } else if (Float.class == item.getClass() || Double.class == item.getClass()) {
+            cell.setCellValue(Double.parseDouble(item.toString()));
+            cell.setCellType(Cell.CELL_TYPE_NUMERIC);
+            cell.setCellStyle(ExcelConstant.STYLE_MAP.get(ExcelConstant.DOUBLE));
+        } else if (String.class == item.getClass()) {
+            cell.setCellType(Cell.CELL_TYPE_STRING);
+            cell.setCellValue((String) item);
+            cell.setCellStyle(ExcelConstant.STYLE_MAP.get(ExcelConstant.STRING));
+        } else if (Date.class == item.getClass()) {
+            cell.setCellType(Cell.CELL_TYPE_STRING);
+            cell.setCellValue((Date) item);
+            cell.setCellStyle(ExcelConstant.STYLE_MAP.get(ExcelConstant.DATE));
+        } else if (Boolean.class == item.getClass()) {
+            cell.setCellType(Cell.CELL_TYPE_BOOLEAN);
+            cell.setCellValue((Boolean) item);
+            cell.setCellStyle(ExcelConstant.STYLE_MAP.get(ExcelConstant.BOOLEAN));
+        } else {
+            cell.setCellType(Cell.CELL_TYPE_STRING);
+            cell.setCellValue(item.toString());
+            cell.setCellStyle(ExcelConstant.STYLE_MAP.get(ExcelConstant.STRING));
+        }
+
+
     }
 
     /**
@@ -245,21 +315,19 @@ public class ExcelOutputWithTemplateUtils {
     }
 
     public static void main(String[] args) throws Exception {
-        HashMap<Integer, String[][]> dateMap = new HashMap<>();
-        String[][] stringDate = new String[4][13];
+        HashMap<Integer, Object[][]> dateMap = new HashMap<>();
+        Object[][] stringDate = new Object[4][13];
         stringDate[0][0] = "书籍导出标题";
-        stringDate[3][0] = "0";
+        stringDate[3][0] = 0;
         stringDate[3][1] = "哈姆雷特";
         stringDate[3][2] = "jayce";
-        stringDate[3][3] = "2018-9";
+        stringDate[3][3] = new Date();
         stringDate[3][4] = "sydfdasd-sadsb";
-        stringDate[3][5] = "3014";
-        /*for (int i = 0; i < stringDate.length; i++) {
-            System.out.println(i + "->" + stringDate[i].length);
-        }*/
-        dateMap.put(1, stringDate);
+        stringDate[3][5] = 14.11111111111111111111111111111111111;
+        stringDate[3][6] = true;
+        dateMap.put(0, stringDate);
         //parseExcelResource("d:/excel/测试模板.xlsx");
-        exportLocal("模板结果测试", "d:/excel/测试模板.xlsx", dateMap, "d:/excel/result");
+        exportLocal("模板结果测试", "/excel/测试模板.xlsx", true, dateMap, "d:/excel/result");
     }
 
 }
